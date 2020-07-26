@@ -33,32 +33,31 @@ def spamFilterChecker():
       # ----------------------------------------------------------------------------
       # Make a POST request to the plino Spam API. 
       # ----------------------------------------------------------------------------
-      global check_var 
-      global classifier 
-      if check_var == 0: 
-            data = []
-            for verdict in ['spam', 'not_spam']:
-                  for files in glob.glob(PATH + verdict + "/*")[:500]:
-                        is_spam = True if verdict == 'spam' else False
-                        with open(files, "r", encoding='utf-8', errors='ignore') as f:
-                              for line in f:
-                                    if line.startswith("Subject:"):
-                                          subject = re.sub("^Subject: ", "", line).strip()
-                                          data.append((subject, is_spam))
+      data = []
+      for verdict in ['spam', 'not_spam']:
+            for files in glob.glob(PATH + verdict + "/*")[:500]:
+                  is_spam = True if verdict == 'spam' else False
+                  with open(files, "r", encoding='utf-8', errors='ignore') as f:
+                        for line in f:
+                              if line.startswith("Subject:"):
+                                    subject = re.sub("^Subject: ", "", line).strip()
+                                    data.append((subject, is_spam))
 
-            random.seed(0)
-            train_data, test_data = split_data(data, 0.75)
-            classifier = NaiveBayesClassifier()
-            classifier.train(train_data)
-            check_var = 1 
+      random.seed(0)
+      train_data, test_data = split_data(data, 0.80)
+      classifier = NaiveBayesClassifier()
+      classifier.train(train_data)
       
       json_response = ""
-      if classifier.classify(text_to_be_classified) > 0.5: 
+      value = classifier.classify(text_to_be_classified) 
+      if value < 0.9: 
             json_response = "{'email_class' : 'spam'}"
       else:
             json_response = "{'email_class' : 'ham'}"
-      print ("Sending Response : ") 
+      print ("====================================================")
+      print ("POSSIBILITY OF HAM : ", value) 
       print(json_response) 
+      print ("====================================================")
       return json_response 
         
 
